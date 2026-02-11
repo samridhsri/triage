@@ -62,6 +62,10 @@ def write_to_notion(item, raw_input):
         raise Exception(f"Unsupported type: {item_type}")
 
     db_id = DB_MAP[item_type]
+    if not db_id:
+        print(f'[LOG] {item_type} not written (DB not configured): "{item["title"]}"')
+        return
+
     props = build_properties(item_type, item, raw_input)
 
     notion.pages.create(
@@ -69,119 +73,50 @@ def write_to_notion(item, raw_input):
         properties=props,
     )
 
-# def build_properties(item_type, item, raw_input):
-#     base = {
-#         "Raw Input": rich_text_prop(raw_input)
-#     }
-
-#     # Task
-#     if item_type == "Task":
-#         base.update({
-#             "Title": title_prop(item["title"]),
-#             "Status": status_prop("Todo"),
-#             "Priority": multi_select_prop(
-#                 item["structured_fields"].get("priority")
-#             ),
-#             "Due Date": date_prop(
-#                 item["structured_fields"].get("due_date")
-#             ),
-#             "Next Step": rich_text_prop(item["next_step"]),
-#             "Confidence": number_prop(item["confidence"]),
-#         })
-
-
-#     # Project
-#     elif item_type == "Project":
-#         base.update({
-#             "Goal": title_prop(item["title"]),
-#             "Success Criteria": rich_text_prop(
-#                 item["structured_fields"].get("success_criteria", "")
-#             ),
-#             "Review Frequency": select_prop(
-#                 item["structured_fields"].get("review_frequency")
-#             ),
-#         })
-
-#     # Idea
-#     elif item_type == "Idea":
-#         base.update({
-#             "Idea": title_prop(item["title"]),
-#             "Category": select_prop(
-#                 item["structured_fields"].get("category")
-#             ),
-#             "Potential Impact": select_prop(
-#                 item["structured_fields"].get("potential_impact")
-#             ),
-#             "Next Thinking Step": rich_text_prop(item["next_step"]),
-#             "Confidence": number_prop(item["confidence"]),
-#         })
-
-#     # Reminder
-#     elif item_type == "Reminder":
-#         base.update({
-#             "Reminder": title_prop(item["title"]),
-#             "Trigger Date": date_prop(item["structured_fields"].get("trigger_date")),
-#             "Urgency": select_prop(
-#                 item["structured_fields"].get("urgency")
-#             ),
-#         })
-
-#     return base
-
-
 def build_properties(item_type, item, raw_input):
-    if item_type != "Task":
-        raise Exception(f"Unsupported type: {item_type}")
+    fields = item.get("structured_fields", {})
 
-    props = {
-        "Name": {
-            "title": [
-                {
-                    "text": {
-                        "content": item["title"]
-                    }
-                }
-            ]
-        },
-        "Raw Input": {
-            "rich_text": [
-                {
-                    "text": {
-                        "content": raw_input
-                    }
-                }
-            ]
-        },
-        "Status": {
-            "status": {
-                "name": "Todo"
-            }
-        },
-        "Source": {
-            "select": {
-                "name": "AI"
-            }
+    if item_type == "Task":
+        props = {
+            "Name": title_prop(item["title"]),
+            "Raw Input": rich_text_prop(raw_input),
+            "Status": {"status": {"name": "Todo"}},
+            "Source": select_prop("AI"),
         }
-    }
+        priority = fields.get("priority")
+        if priority:
+            props["Priority"] = multi_select_prop(priority)
+        due_date = fields.get("due_date")
+        if due_date:
+            props["Due date"] = date_prop(due_date)
+        return props
 
-    # Priority (multi-select)
-    priority = item.get("structured_fields", {}).get("priority")
-    if priority:
-        props["Priority"] = {
-            "multi_select": [
-                {"name": priority}
-            ]
+    if item_type == "Project":
+        props = {
+            "Goal": title_prop(item["title"]),
+            "Raw Input": rich_text_prop(raw_input),
+            "Source": select_prop("AI"),
         }
+        success_criteria = fields.get("success_criteria")
+        if success_criteria:
+            props["Success Criteria"] = rich_text_prop(success_criteria)
+        review_frequency = fields.get("review_frequency")
+        if review_frequency:
+            props["Review Frequency"] = select_prop(review_frequency)
+        return props
 
-    # Due date (ISO string: YYYY-MM-DD)
-    due_date = item.get("structured_fields", {}).get("due_date")
-    if due_date:
-        props["Due date"] = {
-            "date": {
-                "start": due_date
-            }
+    if item_type == "Idea":
+        props = {
+            "Idea": title_prop(item["title"]),
         }
+        category = fields.get("category")
+        if category:
+            props["Category"] = multi_select_prop(category)
+        potential_impact = fields.get("potential_impact")
+        if potential_impact:
+            props["Potential Impact"] = select_prop(potential_impact)
+        return props
 
-    return props
+    raise Exception(f"Unsupported type: {item_type}")
 
 
