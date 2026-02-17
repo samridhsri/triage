@@ -1,24 +1,18 @@
 import logging
+import os
 
 from notion_client import Client
 import requests
 
-from config import (
-    NOTION_TOKEN,
-    NOTION_TASKS_DB,
-    NOTION_PROJECTS_DB,
-    NOTION_IDEAS_DB,
-    NOTION_REMINDERS_DB,
-)
+from config import NOTION_TOKEN
+from schema import INTENT_SCHEMA
 
 logger = logging.getLogger(__name__)
 notion = Client(auth=NOTION_TOKEN)
 
 DB_MAP = {
-    "Task": NOTION_TASKS_DB,
-    "Project": NOTION_PROJECTS_DB,
-    "Idea": NOTION_IDEAS_DB,
-    "Reminder": NOTION_REMINDERS_DB,
+    intent_type: os.getenv(schema["db_env_key"])
+    for intent_type, schema in INTENT_SCHEMA.items()
 }
 
 # ---------- Helpers to format properties ----------
@@ -78,47 +72,36 @@ def write_to_notion(item, raw_input):
     logger.info('Notion write OK: %s "%s"', item_type, item["title"])
 
 def build_properties(item_type, item, raw_input):
+    schema = INTENT_SCHEMA[item_type]
     fields = item.get("structured_fields", {})
+    props = {schema["title_field"]: title_prop(item["title"])}
 
-    if item_type == "Task":
-        props = {
-            "Name": title_prop(item["title"]),
-            "Raw Input": rich_text_prop(raw_input),
-            "Status": {"status": {"name": "Todo"}},
-            "Source": select_prop("AI"),
-        }
-        priority = fields.get("priority")
-        if priority:
-            props["Priority"] = multi_select_prop(priority)
-        due_date = fields.get("due_date")
-        if due_date:
-            props["Due date"] = date_prop(due_date)
-        return props
+    for prop_name, spec in schema["properties"].items():
+        prop_type = spec["type"]
 
-    if item_type == "Project":
-        props = {
-            "Goal": title_prop(item["title"]),
-        }
-        success_criteria = fields.get("success_criteria")
-        if success_criteria:
-            props["Success Criteria"] = rich_text_prop(success_criteria)
-        review_frequency = fields.get("review_frequency")
-        if review_frequency:
-            props["Review Frequency"] = select_prop(review_frequency)
-        return props
+        if "default" in spec:
+            value = spec["default"]
+        elif "field" in spec:
+            value = fields.get(spec["field"])
+        elif spec.get("source") == "raw_input":
+            value = raw_input
+        else:
+            continue
 
-    if item_type == "Idea":
-        props = {
-            "Idea": title_prop(item["title"]),
-        }
-        category = fields.get("category")
-        if category:
-            props["Category"] = multi_select_prop(category)
-        potential_impact = fields.get("potential_impact")
-        if potential_impact:
-            props["Potential Impact"] = select_prop(potential_impact)
-        return props
+        if value is None:
+            continue
 
-    raise Exception(f"Unsupported type: {item_type}")
+        if prop_type == "status":
+            props[prop_name] = {"status": {"name": value}}
+        elif prop_type == "select":
+            props[prop_name] = select_prop(value)
+        elif prop_type == "multi_select":
+            props[prop_name] = multi_select_prop(value)
+        elif prop_type == "date":
+            props[prop_name] = date_prop(value)
+        elif prop_type == "rich_text":
+            props[prop_name] = rich_text_prop(value)
+
+    return props
 
 

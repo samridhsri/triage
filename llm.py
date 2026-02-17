@@ -42,7 +42,7 @@ def split_intents(user_input: str) -> list:
                 ],
             }
         ],
-        config={"temperature": 0.2, "max_output_tokens": 1200},
+        config={"temperature": 0.2, "max_output_tokens": 8192},
     )
 
     raw_text = response.text

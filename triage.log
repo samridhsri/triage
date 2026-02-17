@@ -47,3 +47,43 @@
 2026-02-15 16:31:33 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
 2026-02-15 16:31:33 notion       INFO     Notion write OK: Idea "Explore building with Lovable"
 2026-02-15 16:31:33 __main__     INFO     OK Idea created: "Explore building with Lovable"
+2026-02-17 16:05:48 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'Remind me to get formals for the Capgemini Event by tonight']
+2026-02-17 16:05:48 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-17 16:05:50 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-17 16:05:50 llm          INFO     Parsed 1 intent(s) from LLM
+2026-02-17 16:05:50 __main__     INFO     INPUT: "Remind me to get formals for the Capgemini Event by tonight"
+2026-02-17 16:05:51 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-17 16:05:51 notion       INFO     Notion write OK: Task "Get formals for Capgemini event"
+2026-02-17 16:05:51 __main__     INFO     OK Task created: "Get formals for Capgemini event"
+2026-02-17 16:30:51 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'Record a tutorial usage of Triage']
+2026-02-17 16:30:51 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-17 16:30:53 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-17 16:30:53 llm          INFO     Parsed 1 intent(s) from LLM
+2026-02-17 16:30:53 __main__     INFO     INPUT: "Record a tutorial usage of Triage"
+2026-02-17 16:30:53 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-17 16:30:53 notion       INFO     Notion write OK: Task "Record tutorial usage of Triage"
+2026-02-17 16:30:53 __main__     INFO     OK Task created: "Record tutorial usage of Triage"
+2026-02-17 17:22:47 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'Help Anshi with her onboarding process']
+2026-02-17 17:22:47 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-17 17:22:53 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-17 17:22:53 llm          ERROR    Failed to parse LLM response as JSON: Expecting ',' delimiter: line 7 column 23 (char 144)
+2026-02-17 17:22:53 llm          ERROR    Raw response was: {
+  "intents": [
+    {
+      "type": "Task",
+      "title": "Help Anshi with onboarding process",
+      "priority": null,
+      "due_date": null
+2026-02-17 17:22:53 __main__     INFO     INPUT: "Help Anshi with her onboarding process"
+2026-02-17 17:22:53 __main__     WARNING  REJECTED No classifiable intents in: "Help Anshi with her onboarding process"
+2026-02-17 17:24:58 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'Help Anshi with her onboarding process and buy coffee']
+2026-02-17 17:24:58 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-17 17:25:02 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-17 17:25:02 llm          INFO     Parsed 2 intent(s) from LLM
+2026-02-17 17:25:02 __main__     INFO     INPUT: "Help Anshi with her onboarding process and buy coffee"
+2026-02-17 17:25:02 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-17 17:25:02 notion       INFO     Notion write OK: Project "Support Anshi's Onboarding Process"
+2026-02-17 17:25:02 __main__     INFO     OK Project created: "Support Anshi's Onboarding Process"
+2026-02-17 17:25:02 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-17 17:25:02 notion       INFO     Notion write OK: Task "Buy coffee"
+2026-02-17 17:25:02 __main__     INFO     OK Task created: "Buy coffee"

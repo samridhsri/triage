@@ -6,89 +6,47 @@ from unittest.mock import patch
 
 from llm import split_intents
 from notion import write_to_notion
+from schema import INTENT_SCHEMA
 
 _THIS_MODULE = __name__
 logger = logging.getLogger(__name__)
 
-VALID_PRIORITIES = {"High", "Medium", "Low"}
-VALID_REVIEW_FREQS = {"Weekly", "Monthly"}
-_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
+def _validate_intent(intent: dict) -> dict | None:
+    intent_type = intent.get("type")
+    schema = INTENT_SCHEMA.get(intent_type)
+    if schema is None:
+        logger.warning('REJECTED Unknown intent type: "%s"', intent_type)
+        return None
 
-def _validate_task(intent: dict) -> dict | None:
-    """Apply Phase 1 validation rules to a Task intent."""
     title = (intent.get("title") or "").strip()
     if not title:
-        logger.warning("REJECTED Task has empty title")
+        logger.warning("REJECTED %s has empty title", intent_type)
         return None
 
-    priority = intent.get("priority")
-    if priority is not None and priority not in VALID_PRIORITIES:
-        logger.warning('REJECTED Task has unknown priority: "%s"', priority)
-        return None
+    structured_fields = {}
+    for field_name, rules in schema["valid_fields"].items():
+        value = intent.get(field_name)
 
-    due_date = intent.get("due_date")
-    if due_date is not None and not _DATE_RE.match(str(due_date)):
-        logger.warning('REJECTED Task has malformed due date: "%s"', due_date)
-        return None
+        if value is None:
+            structured_fields[field_name] = None
+            continue
+
+        if "allowed" in rules and value not in rules["allowed"]:
+            logger.warning('REJECTED %s has invalid %s: "%s"', intent_type, field_name, value)
+            return None
+
+        if "pattern" in rules and not re.match(rules["pattern"], str(value)):
+            logger.warning('REJECTED %s has malformed %s: "%s"', intent_type, field_name, value)
+            return None
+
+        structured_fields[field_name] = value
 
     return {
-        "type": "Task",
+        "type": intent_type,
         "title": title,
-        "structured_fields": {
-            "priority": priority,
-            "due_date": due_date,
-        },
+        "structured_fields": structured_fields,
     }
-
-
-def _validate_project(intent: dict) -> dict | None:
-    title = (intent.get("title") or "").strip()
-    if not title:
-        logger.warning("REJECTED Project has empty title")
-        return None
-
-    review_frequency = intent.get("review_frequency")
-    if review_frequency is not None and review_frequency not in VALID_REVIEW_FREQS:
-        logger.warning('REJECTED Project has unknown review_frequency: "%s"', review_frequency)
-        return None
-
-    return {
-        "type": "Project",
-        "title": title,
-        "structured_fields": {
-            "success_criteria": intent.get("success_criteria"),
-            "review_frequency": review_frequency,
-        },
-    }
-
-
-def _validate_idea(intent: dict) -> dict | None:
-    title = (intent.get("title") or "").strip()
-    if not title:
-        logger.warning("REJECTED Idea has empty title")
-        return None
-
-    potential_impact = intent.get("potential_impact")
-    if potential_impact is not None and potential_impact not in VALID_PRIORITIES:
-        logger.warning('REJECTED Idea has unknown potential_impact: "%s"', potential_impact)
-        return None
-
-    return {
-        "type": "Idea",
-        "title": title,
-        "structured_fields": {
-            "category": intent.get("category"),
-            "potential_impact": potential_impact,
-        },
-    }
-
-
-_VALIDATORS = {
-    "Task": _validate_task,
-    "Project": _validate_project,
-    "Idea": _validate_idea,
-}
 
 
 def triage(user_input: str) -> None:
@@ -105,14 +63,7 @@ def triage(user_input: str) -> None:
         return
 
     for intent in intents:
-        intent_type = intent.get("type")
-        validator = _VALIDATORS.get(intent_type)
-
-        if validator is None:
-            logger.warning('REJECTED Unknown intent type: "%s"', intent_type)
-            continue
-
-        item = validator(intent)
+        item = _validate_intent(intent)
         if item is None:
             continue
 
@@ -127,7 +78,7 @@ def triage(user_input: str) -> None:
 class TestValidateTask(unittest.TestCase):
 
     def test_valid_full(self):
-        result = _validate_task({"title": "Write report", "priority": "High", "due_date": "2026-02-15"})
+        result = _validate_intent({"type": "Task", "title": "Write report", "priority": "High", "due_date": "2026-02-15"})
         self.assertIsNotNone(result)
         self.assertEqual(result["type"], "Task")
         self.assertEqual(result["title"], "Write report")
@@ -135,69 +86,69 @@ class TestValidateTask(unittest.TestCase):
         self.assertEqual(result["structured_fields"]["due_date"], "2026-02-15")
 
     def test_valid_null_optional_fields(self):
-        result = _validate_task({"title": "Buy groceries", "priority": None, "due_date": None})
+        result = _validate_intent({"type": "Task", "title": "Buy groceries", "priority": None, "due_date": None})
         self.assertIsNotNone(result)
         self.assertIsNone(result["structured_fields"]["priority"])
         self.assertIsNone(result["structured_fields"]["due_date"])
 
     def test_title_whitespace_only_rejected(self):
-        self.assertIsNone(_validate_task({"title": "   ", "priority": None, "due_date": None}))
+        self.assertIsNone(_validate_intent({"type": "Task", "title": "   ", "priority": None, "due_date": None}))
 
     def test_invalid_priority_rejected(self):
-        self.assertIsNone(_validate_task({"title": "Do something", "priority": "Urgent", "due_date": None}))
+        self.assertIsNone(_validate_intent({"type": "Task", "title": "Do something", "priority": "Urgent", "due_date": None}))
 
     def test_malformed_date_rejected(self):
-        self.assertIsNone(_validate_task({"title": "Do something", "priority": None, "due_date": "next Friday"}))
+        self.assertIsNone(_validate_intent({"type": "Task", "title": "Do something", "priority": None, "due_date": "next Friday"}))
 
     def test_all_valid_priorities_accepted(self):
         for p in ("High", "Medium", "Low"):
             with self.subTest(priority=p):
-                self.assertIsNotNone(_validate_task({"title": "Do something", "priority": p, "due_date": None}))
+                self.assertIsNotNone(_validate_intent({"type": "Task", "title": "Do something", "priority": p, "due_date": None}))
 
 
 class TestValidateProject(unittest.TestCase):
 
     def test_valid_full(self):
-        result = _validate_project({"title": "Launch website", "success_criteria": "1000 signups", "review_frequency": "Weekly"})
+        result = _validate_intent({"type": "Project", "title": "Launch website", "success_criteria": "1000 signups", "review_frequency": "Weekly"})
         self.assertIsNotNone(result)
         self.assertEqual(result["type"], "Project")
         self.assertEqual(result["structured_fields"]["review_frequency"], "Weekly")
         self.assertEqual(result["structured_fields"]["success_criteria"], "1000 signups")
 
     def test_valid_null_optional_fields(self):
-        result = _validate_project({"title": "Redesign dashboard", "success_criteria": None, "review_frequency": None})
+        result = _validate_intent({"type": "Project", "title": "Redesign dashboard", "success_criteria": None, "review_frequency": None})
         self.assertIsNotNone(result)
 
     def test_empty_title_rejected(self):
-        self.assertIsNone(_validate_project({"title": "", "success_criteria": None, "review_frequency": None}))
+        self.assertIsNone(_validate_intent({"type": "Project", "title": "", "success_criteria": None, "review_frequency": None}))
 
     def test_invalid_review_frequency_rejected(self):
-        self.assertIsNone(_validate_project({"title": "Some project", "review_frequency": "Daily"}))
+        self.assertIsNone(_validate_intent({"type": "Project", "title": "Some project", "review_frequency": "Daily"}))
 
     def test_valid_review_frequencies_accepted(self):
         for freq in ("Weekly", "Monthly"):
             with self.subTest(freq=freq):
-                self.assertIsNotNone(_validate_project({"title": "Some project", "review_frequency": freq}))
+                self.assertIsNotNone(_validate_intent({"type": "Project", "title": "Some project", "review_frequency": freq}))
 
 
 class TestValidateIdea(unittest.TestCase):
 
     def test_valid_full(self):
-        result = _validate_idea({"title": "AI writing assistant", "category": "Product", "potential_impact": "High"})
+        result = _validate_intent({"type": "Idea", "title": "AI writing assistant", "category": "Product", "potential_impact": "High"})
         self.assertIsNotNone(result)
         self.assertEqual(result["type"], "Idea")
         self.assertEqual(result["structured_fields"]["category"], "Product")
         self.assertEqual(result["structured_fields"]["potential_impact"], "High")
 
     def test_valid_null_optional_fields(self):
-        result = _validate_idea({"title": "Use dark mode", "category": None, "potential_impact": None})
+        result = _validate_intent({"type": "Idea", "title": "Use dark mode", "category": None, "potential_impact": None})
         self.assertIsNotNone(result)
 
     def test_empty_title_rejected(self):
-        self.assertIsNone(_validate_idea({"title": "", "category": None, "potential_impact": None}))
+        self.assertIsNone(_validate_intent({"type": "Idea", "title": "", "category": None, "potential_impact": None}))
 
     def test_invalid_potential_impact_rejected(self):
-        self.assertIsNone(_validate_idea({"title": "Cool idea", "potential_impact": "Huge"}))
+        self.assertIsNone(_validate_intent({"type": "Idea", "title": "Cool idea", "potential_impact": "Huge"}))
 
 
 class TestTriage(unittest.TestCase):
