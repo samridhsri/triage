@@ -91,12 +91,16 @@ Then double-click `triage.ahk` to run it (AutoHotkey must be installed). You'll 
 
 Examples of what you can say:
 
-- `"email the contractor by Friday and look into switching to Cloudflare"` → 2 Tasks
-- `"build a personal finance tracker"` → Project
-- `"serverless functions might be cheaper at scale"` → Idea
-- `"submit invoice tomorrow high priority, also idea: dark mode for the app"` → Task + Idea
-
----
+- `"email the recruiter and practice trees tonight"` → 2 Tasks  
+- `"build a chrome extension to track job applications"` → Project  
+- `"what if I built an AI tool that rewrites resumes for each job"` → Idea  
+- `"submit internship application tomorrow high priority, also idea: track referral sources"` → Task + Idea  
+- `"follow up with Ankit about the referral and push the latest commit"` → 2 Tasks  
+- `"prep system design basics this weekend"` → Task  
+- `"DSA tracker but gamified"` → Idea  
+- `"NYC startup list and cold email them"` → Project  
+ 
+ --
 
 ## Notion Workspace Structure
 
