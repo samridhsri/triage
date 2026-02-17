@@ -1,3 +1,4 @@
+import logging
 import re
 import requests
 import json
@@ -9,7 +10,7 @@ from google import genai
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-print("GEMINI_API_KEY loaded:", bool(GEMINI_API_KEY))
+logger = logging.getLogger(__name__)
 
 
 def _extract_json(text: str) -> str:
@@ -45,9 +46,16 @@ def split_intents(user_input: str) -> list:
     )
 
     raw_text = response.text
-    print("Raw splitter response:", raw_text)
-    parsed = json.loads(_extract_json(raw_text))
-    return parsed.get("intents", [])
+    logger.debug("Raw splitter response: %s", raw_text)
+    try:
+        parsed = json.loads(_extract_json(raw_text))
+    except json.JSONDecodeError as e:
+        logger.error("Failed to parse LLM response as JSON: %s", e)
+        logger.error("Raw response was: %s", raw_text)
+        return []
+    intents = parsed.get("intents", [])
+    logger.info("Parsed %d intent(s) from LLM", len(intents))
+    return intents
 
 
 def route_input(user_input):
@@ -76,6 +84,6 @@ def route_input(user_input):
     )
 
     raw_text = response.text
-    print("Raw response text:", raw_text)
+    logger.debug("Raw route_input response: %s", raw_text)
     return json.loads(_extract_json(raw_text))
 

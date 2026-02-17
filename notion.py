@@ -1,3 +1,5 @@
+import logging
+
 from notion_client import Client
 import requests
 
@@ -9,6 +11,7 @@ from config import (
     NOTION_REMINDERS_DB,
 )
 
+logger = logging.getLogger(__name__)
 notion = Client(auth=NOTION_TOKEN)
 
 DB_MAP = {
@@ -63,7 +66,7 @@ def write_to_notion(item, raw_input):
 
     db_id = DB_MAP[item_type]
     if not db_id:
-        print(f'[LOG] {item_type} not written (DB not configured): "{item["title"]}"')
+        logger.warning('%s not written (DB not configured): "%s"', item_type, item["title"])
         return
 
     props = build_properties(item_type, item, raw_input)
@@ -72,6 +75,7 @@ def write_to_notion(item, raw_input):
         parent={"database_id": db_id},
         properties=props,
     )
+    logger.info('Notion write OK: %s "%s"', item_type, item["title"])
 
 def build_properties(item_type, item, raw_input):
     fields = item.get("structured_fields", {})
@@ -94,8 +98,6 @@ def build_properties(item_type, item, raw_input):
     if item_type == "Project":
         props = {
             "Goal": title_prop(item["title"]),
-            "Raw Input": rich_text_prop(raw_input),
-            "Source": select_prop("AI"),
         }
         success_criteria = fields.get("success_criteria")
         if success_criteria:

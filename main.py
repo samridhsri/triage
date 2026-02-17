@@ -1,4 +1,6 @@
+import logging
 import re
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -6,6 +8,7 @@ from llm import split_intents
 from notion import write_to_notion
 
 _THIS_MODULE = __name__
+logger = logging.getLogger(__name__)
 
 VALID_PRIORITIES = {"High", "Medium", "Low"}
 VALID_REVIEW_FREQS = {"Weekly", "Monthly"}
@@ -16,17 +19,17 @@ def _validate_task(intent: dict) -> dict | None:
     """Apply Phase 1 validation rules to a Task intent."""
     title = (intent.get("title") or "").strip()
     if not title:
-        print("[REJECTED] Task has empty title")
+        logger.warning("REJECTED Task has empty title")
         return None
 
     priority = intent.get("priority")
     if priority is not None and priority not in VALID_PRIORITIES:
-        print(f'[REJECTED] Task has unknown priority: "{priority}"')
+        logger.warning('REJECTED Task has unknown priority: "%s"', priority)
         return None
 
     due_date = intent.get("due_date")
     if due_date is not None and not _DATE_RE.match(str(due_date)):
-        print(f'[REJECTED] Task has malformed due date: "{due_date}"')
+        logger.warning('REJECTED Task has malformed due date: "%s"', due_date)
         return None
 
     return {
@@ -42,12 +45,12 @@ def _validate_task(intent: dict) -> dict | None:
 def _validate_project(intent: dict) -> dict | None:
     title = (intent.get("title") or "").strip()
     if not title:
-        print("[REJECTED] Project has empty title")
+        logger.warning("REJECTED Project has empty title")
         return None
 
     review_frequency = intent.get("review_frequency")
     if review_frequency is not None and review_frequency not in VALID_REVIEW_FREQS:
-        print(f'[REJECTED] Project has unknown review_frequency: "{review_frequency}"')
+        logger.warning('REJECTED Project has unknown review_frequency: "%s"', review_frequency)
         return None
 
     return {
@@ -63,12 +66,12 @@ def _validate_project(intent: dict) -> dict | None:
 def _validate_idea(intent: dict) -> dict | None:
     title = (intent.get("title") or "").strip()
     if not title:
-        print("[REJECTED] Idea has empty title")
+        logger.warning("REJECTED Idea has empty title")
         return None
 
     potential_impact = intent.get("potential_impact")
     if potential_impact is not None and potential_impact not in VALID_PRIORITIES:
-        print(f'[REJECTED] Idea has unknown potential_impact: "{potential_impact}"')
+        logger.warning('REJECTED Idea has unknown potential_impact: "%s"', potential_impact)
         return None
 
     return {
@@ -95,8 +98,10 @@ def triage(user_input: str) -> None:
     """
     intents = split_intents(user_input)
 
+    logger.info('INPUT: "%s"', user_input[:120])
+
     if not intents:
-        print(f'[REJECTED] No classifiable intents in: "{user_input[:80]}"')
+        logger.warning('REJECTED No classifiable intents in: "%s"', user_input[:80])
         return
 
     for intent in intents:
@@ -104,7 +109,7 @@ def triage(user_input: str) -> None:
         validator = _VALIDATORS.get(intent_type)
 
         if validator is None:
-            print(f'[REJECTED] Unknown intent type: "{intent_type}"')
+            logger.warning('REJECTED Unknown intent type: "%s"', intent_type)
             continue
 
         item = validator(intent)
@@ -112,7 +117,7 @@ def triage(user_input: str) -> None:
             continue
 
         write_to_notion(item, user_input)
-        print(f'[OK] {item["type"]} created: "{item["title"]}"')
+        logger.info('OK %s created: "%s"', item["type"], item["title"])
 
 
 # ---------------------------------------------------------------------------
@@ -262,5 +267,25 @@ class TestTriage(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # unittest.main()
-    triage("Finish ML assignment by Friday and think about an AI music startup")
+    fmt = logging.Formatter(
+        "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    fh = logging.FileHandler("triage.log", encoding="utf-8")
+    fh.setFormatter(fmt)
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setFormatter(fmt)
+    logging.root.setLevel(logging.INFO)
+    logging.root.addHandler(fh)
+    logging.root.addHandler(sh)
+
+    logger.info("main.py started, argv: %s", sys.argv)
+    try:
+        if len(sys.argv) > 1:
+            triage(sys.argv[1])
+            # print("Received input:", sys.argv[1])
+    except Exception as e:
+        logger.exception("Unhandled error: %s", e)
+    finally:
+        input("\nPress Enter to close...")
+

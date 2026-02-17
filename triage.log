@@ -1,0 +1,49 @@
+2026-02-10 21:09:56 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-10 21:10:02 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-10 21:13:46 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-10 21:13:49 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-10 21:13:49 llm          INFO     Parsed 1 intent(s) from LLM
+2026-02-10 21:13:49 __main__     INFO     INPUT: "Do Leetcode"
+2026-02-10 21:13:50 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-10 21:13:50 notion       INFO     Notion write OK: Project "Do Leetcode"
+2026-02-10 21:13:50 __main__     INFO     OK Project created: "Do Leetcode"
+2026-02-10 21:47:04 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'hello']
+2026-02-10 21:47:04 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-10 21:47:05 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-10 21:47:05 llm          INFO     Parsed 0 intent(s) from LLM
+2026-02-10 21:47:05 __main__     INFO     INPUT: "hello"
+2026-02-10 21:47:05 __main__     WARNING  REJECTED No classifiable intents in: "hello"
+2026-02-10 21:47:36 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'hello']
+2026-02-10 21:50:32 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'add a project about flowers, and add tasks to name different flowers in that project.']
+2026-02-10 21:50:32 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-10 21:50:36 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-10 21:50:36 llm          INFO     Parsed 2 intent(s) from LLM
+2026-02-10 21:50:36 __main__     INFO     INPUT: "add a project about flowers, and add tasks to name different flowers in that project."
+2026-02-10 21:50:36 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-10 21:50:36 notion       INFO     Notion write OK: Project "Project about flowers"
+2026-02-10 21:50:36 __main__     INFO     OK Project created: "Project about flowers"
+2026-02-10 21:50:36 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-10 21:50:36 notion       INFO     Notion write OK: Task "Name different flowers"
+2026-02-10 21:50:36 __main__     INFO     OK Task created: "Name different flowers"
+2026-02-10 21:52:27 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'i have to prepare for an exam tomorror']
+2026-02-10 21:52:27 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-10 21:52:29 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-10 21:52:29 llm          INFO     Parsed 1 intent(s) from LLM
+2026-02-10 21:52:29 __main__     INFO     INPUT: "i have to prepare for an exam tomorror"
+2026-02-10 21:52:30 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-10 21:52:30 notion       INFO     Notion write OK: Task "Prepare for exam"
+2026-02-10 21:52:30 __main__     INFO     OK Task created: "Prepare for exam"
+2026-02-11 13:01:40 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'cute']
+2026-02-11 13:01:40 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-11 13:01:41 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-11 13:01:41 llm          INFO     Parsed 0 intent(s) from LLM
+2026-02-11 13:01:41 __main__     INFO     INPUT: "cute"
+2026-02-11 13:01:41 __main__     WARNING  REJECTED No classifiable intents in: "cute"
+2026-02-15 16:31:29 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'Try building stuff with Lovable']
+2026-02-15 16:31:29 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-15 16:31:33 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-15 16:31:33 llm          INFO     Parsed 1 intent(s) from LLM
+2026-02-15 16:31:33 __main__     INFO     INPUT: "Try building stuff with Lovable"
+2026-02-15 16:31:33 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-15 16:31:33 notion       INFO     Notion write OK: Idea "Explore building with Lovable"
+2026-02-15 16:31:33 __main__     INFO     OK Idea created: "Explore building with Lovable"
