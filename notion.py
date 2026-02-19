@@ -1,7 +1,10 @@
 import logging
 import os
+import random
+import time
 
 from notion_client import Client
+from notion_client.errors import APIResponseError
 import requests
 
 from config import NOTION_TOKEN
@@ -51,6 +54,37 @@ def date_prop(date_str):
 
 
 
+# ---------- Retry wrapper ----------
+
+_MAX_ATTEMPTS = 3
+_BACKOFF_BASE  = 2   # seconds
+
+def _create_page_with_retry(parent, properties):
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            return notion.pages.create(parent=parent, properties=properties)
+        except APIResponseError as exc:
+            status = exc.status
+            if status == 429 or (500 <= status < 600):
+                if attempt == _MAX_ATTEMPTS:
+                    logger.error(
+                        "Notion API error %s after %d attempts — giving up",
+                        status, _MAX_ATTEMPTS,
+                    )
+                    raise
+                retry_after = getattr(exc, "headers", {}).get("Retry-After")
+                wait = float(retry_after) if retry_after else (
+                    _BACKOFF_BASE ** attempt + random.uniform(0, 1)
+                )
+                logger.warning(
+                    "Notion API %s on attempt %d/%d — retrying in %.1fs",
+                    status, attempt, _MAX_ATTEMPTS, wait,
+                )
+                time.sleep(wait)
+            else:
+                raise
+
+
 # ---------- Write a routed item to Notion ----------
 
 def write_to_notion(item, raw_input):
@@ -65,7 +99,7 @@ def write_to_notion(item, raw_input):
 
     props = build_properties(item_type, item, raw_input)
 
-    notion.pages.create(
+    _create_page_with_retry(
         parent={"database_id": db_id},
         properties=props,
     )

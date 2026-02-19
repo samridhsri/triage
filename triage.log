@@ -87,3 +87,17 @@
 2026-02-17 17:25:02 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
 2026-02-17 17:25:02 notion       INFO     Notion write OK: Task "Buy coffee"
 2026-02-17 17:25:02 __main__     INFO     OK Task created: "Buy coffee"
+2026-02-19 14:13:04 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'Do Homework 3 by Feb 27th']
+2026-02-19 14:13:04 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-19 14:13:07 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-19 14:13:07 llm          INFO     Parsed 1 intent(s) from LLM
+2026-02-19 14:13:07 __main__     INFO     INPUT: "Do Homework 3 by Feb 27th"
+2026-02-19 14:13:07 httpx        INFO     HTTP Request: POST https://api.notion.com/v1/pages "HTTP/1.1 200 OK"
+2026-02-19 14:13:07 notion       INFO     Notion write OK: Task "Do Homework 3"
+2026-02-19 14:13:07 __main__     INFO     OK Task created: "Do Homework 3"
+2026-02-19 15:11:57 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'ajsfbcas jbca bsc']
+2026-02-19 15:11:57 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-19 15:11:58 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-19 15:11:58 llm          INFO     Parsed 0 intent(s) from LLM
+2026-02-19 15:11:58 __main__     INFO     INPUT: "ajsfbcas jbca bsc"
+2026-02-19 15:11:58 __main__     WARNING  REJECTED No classifiable intents in: "ajsfbcas jbca bsc"
