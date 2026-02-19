@@ -101,3 +101,9 @@
 2026-02-19 15:11:58 llm          INFO     Parsed 0 intent(s) from LLM
 2026-02-19 15:11:58 __main__     INFO     INPUT: "ajsfbcas jbca bsc"
 2026-02-19 15:11:58 __main__     WARNING  REJECTED No classifiable intents in: "ajsfbcas jbca bsc"
+2026-02-19 15:18:42 __main__     INFO     main.py started, argv: ['C:\\Users\\Samri\\Desktop\\Coding and stuff\\Triage\\main.py', 'Hello']
+2026-02-19 15:18:42 google_genai.models INFO     AFC is enabled with max remote calls: 10.
+2026-02-19 15:18:43 httpx        INFO     HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-02-19 15:18:43 llm          INFO     Parsed 0 intent(s) from LLM
+2026-02-19 15:18:43 __main__     INFO     INPUT: "Hello"
+2026-02-19 15:18:43 __main__     WARNING  REJECTED No classifiable intents in: "Hello"

@@ -1,7 +1,10 @@
+import json
 import logging
 import os
 import random
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 
 from notion_client import Client
 from notion_client.errors import APIResponseError
@@ -9,6 +12,8 @@ import requests
 
 from config import NOTION_TOKEN
 from schema import INTENT_SCHEMA
+
+DEAD_LETTER_PATH = Path(__file__).parent / "dead_letter.jsonl"
 
 logger = logging.getLogger(__name__)
 notion = Client(auth=NOTION_TOKEN)
@@ -85,6 +90,17 @@ def _create_page_with_retry(parent, properties):
                 raise
 
 
+def _write_to_dead_letter(item, raw_input):
+    entry = {
+        "item": item,
+        "raw_input": raw_input,
+        "failed_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with DEAD_LETTER_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
+    logger.warning('Dead-lettered %s "%s"', item["type"], item["title"])
+
+
 # ---------- Write a routed item to Notion ----------
 
 def write_to_notion(item, raw_input):
@@ -99,11 +115,14 @@ def write_to_notion(item, raw_input):
 
     props = build_properties(item_type, item, raw_input)
 
-    _create_page_with_retry(
-        parent={"database_id": db_id},
-        properties=props,
-    )
-    logger.info('Notion write OK: %s "%s"', item_type, item["title"])
+    try:
+        _create_page_with_retry(
+            parent={"database_id": db_id},
+            properties=props,
+        )
+        logger.info('Notion write OK: %s "%s"', item_type, item["title"])
+    except Exception:
+        _write_to_dead_letter(item, raw_input)
 
 def build_properties(item_type, item, raw_input):
     schema = INTENT_SCHEMA[item_type]

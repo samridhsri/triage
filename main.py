@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import sys
@@ -5,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from llm import split_intents
-from notion import write_to_notion
+from notion import DEAD_LETTER_PATH, write_to_notion
 from schema import INTENT_SCHEMA
 
 _THIS_MODULE = __name__
@@ -69,6 +70,32 @@ def triage(user_input: str) -> None:
 
         write_to_notion(item, user_input)
         logger.info('OK %s created: "%s"', item["type"], item["title"])
+
+
+def flush_dead_letter() -> None:
+    if not DEAD_LETTER_PATH.exists():
+        logger.info("Dead-letter queue is empty.")
+        return
+
+    lines = DEAD_LETTER_PATH.read_text(encoding="utf-8").splitlines()
+    entries = [json.loads(line) for line in lines if line.strip()]
+    if not entries:
+        logger.info("Dead-letter queue is empty.")
+        return
+
+    logger.info("Flushing %d dead-letter item(s)...", len(entries))
+    # Clear the file before replaying — failures will re-append themselves
+    DEAD_LETTER_PATH.write_text("", encoding="utf-8")
+
+    ok = failed = 0
+    for entry in entries:
+        try:
+            write_to_notion(entry["item"], entry["raw_input"])
+            ok += 1
+        except Exception:
+            failed += 1  # write_to_notion already re-appended to DLQ
+
+    logger.info("DLQ flush complete: %d OK, %d re-queued", ok, failed)
 
 
 # ---------------------------------------------------------------------------
@@ -233,7 +260,10 @@ if __name__ == "__main__":
     logger.info("main.py started, argv: %s", sys.argv)
     try:
         if len(sys.argv) > 1:
-            triage(sys.argv[1])
+            if sys.argv[1] == "--flush":
+                flush_dead_letter()
+            else:
+                triage(sys.argv[1])
             # print("Received input:", sys.argv[1])
     except Exception as e:
         logger.exception("Unhandled error: %s", e)
