@@ -7,10 +7,14 @@ from datetime import date
 from dotenv import load_dotenv
 from google import genai
 
+from feedback import get_few_shot_prompt, is_feedback_enabled
+
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 logger = logging.getLogger(__name__)
+
+PROMPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "splitter_prompt.txt")
 
 
 def _extract_json(text: str) -> str:
@@ -25,8 +29,13 @@ client = genai.Client()
 
 
 def split_intents(user_input: str) -> list:
-    with open("splitter_prompt.txt", "r") as f:
+    with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         system_prompt = f.read()
+
+    if is_feedback_enabled():
+        few_shot = get_few_shot_prompt()
+        if few_shot:
+            system_prompt = system_prompt + "\n" + few_shot
 
     today = date.today().isoformat()
     message = f"TODAY: {today}\n\nUSER INPUT:\n{user_input}"

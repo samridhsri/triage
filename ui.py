@@ -2,6 +2,8 @@ import os
 import subprocess
 import tkinter as tk
 
+from feedback import is_feedback_enabled, set_feedback_enabled
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MAIN_PY    = os.path.join(SCRIPT_DIR, "main.py")
 VENV_PY    = os.path.join(SCRIPT_DIR, "myenv", "Scripts", "python.exe")
@@ -17,7 +19,7 @@ HINT    = "#2E2E2E"   # very subtle hint labels
 FONT    = "Segoe UI"
 
 PLACEHOLDER = "capture a task, project, or idea…"
-WIN_W, WIN_H = 640, 104
+WIN_W, WIN_H = 640, 108
 
 # ── Logic ────────────────────────────────────────────────────────────────────
 def submit():
@@ -44,6 +46,16 @@ def restore_placeholder(_):
         entry.config(fg=MUTED)
         entry.insert("1.0", PLACEHOLDER)
 
+def toggle_feedback():
+    current = is_feedback_enabled()
+    set_feedback_enabled(not current)
+    update_fb_btn_text()
+
+def update_fb_btn_text():
+    enabled = is_feedback_enabled()
+    fb_var.set("fb: ON" if enabled else "fb: OFF")
+    fb_btn.config(fg=ACCENT if enabled else HINT)
+
 # ── Window ───────────────────────────────────────────────────────────────────
 root = tk.Tk()
 root.overrideredirect(True)          # frameless
@@ -67,10 +79,31 @@ tk.Label(
     font=(FONT, 8, "bold"), bg=BG, fg=ACCENT,
 ).pack(side="left")
 
+right_hdr = tk.Frame(hdr, bg=BG)
+right_hdr.pack(side="right")
+
+fb_var = tk.StringVar()
+fb_btn = tk.Button(
+    right_hdr,
+    textvariable=fb_var,
+    font=(FONT, 8, "bold"),
+    bg=BG,
+    fg=ACCENT,
+    activebackground=BG,
+    activeforeground=TEXT,
+    relief="flat",
+    bd=0,
+    command=toggle_feedback,
+    cursor="hand2",
+)
+fb_btn.pack(side="left", padx=(0, 15))
+
 tk.Label(
-    hdr, text="↵  send     esc  close",
+    right_hdr, text="↵  send     esc  close",
     font=(FONT, 8), bg=BG, fg=HINT,
-).pack(side="right")
+).pack(side="left")
+
+update_fb_btn_text()
 
 # ── Thin divider ─────────────────────────────────────────────────────────────
 tk.Frame(body, bg=BORDER, height=1).pack(fill="x", pady=(10, 0))

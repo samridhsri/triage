@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from feedback import is_feedback_enabled, set_feedback_enabled
 from llm import split_intents
 from notion import DEAD_LETTER_PATH, validate_notion_schemas, write_to_notion
 from schema import INTENT_SCHEMA
@@ -54,7 +55,7 @@ def _validate_intent(intent: dict) -> dict | None:
     }
 
 
-def triage(user_input: str) -> None:
+def triage(user_input: str, interactive_feedback: bool = True) -> None:
     """
     Phase 2 router: decompose raw input into typed intents, validate each,
     and write to the appropriate Notion database.
@@ -62,6 +63,13 @@ def triage(user_input: str) -> None:
     intents = split_intents(user_input)
 
     logger.info('INPUT: "%s"', user_input[:120])
+
+    if is_feedback_enabled() and interactive_feedback:
+        try:
+            from feedback_ui import review_intents_interactive
+            intents = review_intents_interactive(user_input, intents)
+        except Exception as e:
+            logger.error("Failed to run feedback interactive window: %s", e)
 
     if not intents:
         logger.warning('REJECTED No classifiable intents in: "%s"', user_input[:80])
@@ -193,6 +201,13 @@ class TestValidateIdea(unittest.TestCase):
 
 class TestTriage(unittest.TestCase):
 
+    def setUp(self):
+        self.fb_patch = patch(f"{_THIS_MODULE}.is_feedback_enabled", return_value=False)
+        self.fb_patch.start()
+
+    def tearDown(self):
+        self.fb_patch.stop()
+
     def test_no_intents_nothing_written(self):
         with patch(f"{_THIS_MODULE}.split_intents", return_value=[]):
             with patch(f"{_THIS_MODULE}.write_to_notion") as mock_write:
@@ -273,13 +288,29 @@ if __name__ == "__main__":
     logger.info("main.py started, argv: %s", sys.argv)
     validate_notion_schemas()
     try:
-        if len(sys.argv) > 1:
-            if sys.argv[1] == "--flush":
-                flush_dead_letter()
-            else:
-                _log_raw_input(sys.argv[1])
-                triage(sys.argv[1])
-            # print("Received input:", sys.argv[1])
+        args = sys.argv[1:]
+        if args:
+            if "--feedback-on" in args:
+                set_feedback_enabled(True)
+                logger.info("Feedback mode enabled via CLI flag")
+                args.remove("--feedback-on")
+            elif "--feedback-off" in args:
+                set_feedback_enabled(False)
+                logger.info("Feedback mode disabled via CLI flag")
+                args.remove("--feedback-off")
+
+            interactive = True
+            if "--no-interactive" in args:
+                interactive = False
+                args.remove("--no-interactive")
+
+            if args:
+                cmd = args[0]
+                if cmd == "--flush":
+                    flush_dead_letter()
+                else:
+                    _log_raw_input(cmd)
+                    triage(cmd, interactive_feedback=interactive)
     except Exception as e:
         logger.exception("Unhandled error: %s", e)
     finally:

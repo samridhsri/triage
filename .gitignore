@@ -45,6 +45,8 @@ todo
 triage.log
 raw_inputs.jsonl
 dead_letter.jsonl
+feedback.jsonl
+feedback_config.json
 myenv/
 .claude/
 

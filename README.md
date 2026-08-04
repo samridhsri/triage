@@ -104,15 +104,36 @@ You can also run triage directly from your CLI:
 # Run triage on an input string
 myenv\Scripts\python.exe main.py "email recruiter and push latest commit"
 
+# Toggle feedback mode ON or OFF
+myenv\Scripts\python.exe main.py --feedback-on "email recruiter"
+myenv\Scripts\python.exe main.py --feedback-off "email recruiter"
+
+# Run non-interactively (bypass feedback popup)
+myenv\Scripts\python.exe main.py --no-interactive "email recruiter"
+
 # Flush the dead-letter queue (retry failed Notion writes)
 myenv\Scripts\python.exe main.py --flush
 
 # Run unit tests
-myenv\Scripts\python.exe -m unittest main -v
+myenv\Scripts\python.exe -m unittest main.py test_feedback.py -v
 
 # Run LLM evaluation suite
 myenv\Scripts\python.exe evaluation/eval.py --real-only
 ```
+
+---
+
+## Intent Feedback & Learning Over Time
+
+Triage includes an **Intent Feedback & Learning System**:
+
+- **Interactive Review Window**: When feedback mode is enabled, submitting an input opens an interactive review dialog displaying the classified intents.
+- **Provide Corrections**: If Triage misclassifies an input, you can edit the intent type (`Task`, `Project`, `Idea`), adjust title text, or add correction notes.
+- **In-Context Few-Shot Learning**: Corrections are saved to `feedback.jsonl`. Sub-sequent runs automatically inject these corrections into Gemini's system prompt as few-shot exemplars so Triage gets smarter over time.
+- **Toggle Feedback Mode ON / OFF**:
+  - Click `[fb: ON / OFF]` in the floating capture window (`ui.py`).
+  - Toggle `Feedback Mode: ON / OFF` inside the feedback review window.
+  - Pass `--feedback-on` or `--feedback-off` via CLI.
 
 Examples of what you can say:
 
