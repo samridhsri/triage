@@ -101,6 +101,33 @@ def _write_to_dead_letter(item, raw_input):
     logger.warning('Dead-lettered %s "%s"', item["type"], item["title"])
 
 
+def validate_notion_schemas():
+    for intent_type, schema in INTENT_SCHEMA.items():
+        db_id = DB_MAP.get(intent_type)
+        if not db_id:
+            logger.warning("Schema check skipped — no DB configured for %s", intent_type)
+            continue
+        try:
+            db = notion.databases.retrieve(database_id=db_id)
+            actual_props = set(db["properties"].keys()) if "properties" in db else set()
+            if not actual_props and db.get("data_sources"):
+                ds_id = db["data_sources"][0]["id"]
+                ds = notion.data_sources.retrieve(data_source_id=ds_id)
+                actual_props = set(ds.get("properties", {}).keys())
+
+            expected_props = set(schema["properties"].keys()) | {schema["title_field"]}
+            missing = expected_props - actual_props
+            if missing:
+                logger.error(
+                    "Notion %s DB is missing properties: %s — writes may fail",
+                    intent_type, missing,
+                )
+            else:
+                logger.info("Notion %s DB schema OK", intent_type)
+        except Exception as e:
+            logger.error("Could not validate Notion %s DB: %s", intent_type, e)
+
+
 # ---------- Write a routed item to Notion ----------
 
 def write_to_notion(item, raw_input):

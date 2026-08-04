@@ -1,13 +1,17 @@
+import datetime
 import json
 import logging
 import re
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from llm import split_intents
-from notion import DEAD_LETTER_PATH, write_to_notion
+from notion import DEAD_LETTER_PATH, validate_notion_schemas, write_to_notion
 from schema import INTENT_SCHEMA
+
+RAW_INPUT_LOG = Path(__file__).parent / "raw_inputs.jsonl"
 
 _THIS_MODULE = __name__
 logger = logging.getLogger(__name__)
@@ -70,6 +74,15 @@ def triage(user_input: str) -> None:
 
         write_to_notion(item, user_input)
         logger.info('OK %s created: "%s"', item["type"], item["title"])
+
+
+def _log_raw_input(text: str) -> None:
+    entry = {
+        "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "input": text,
+    }
+    with RAW_INPUT_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
 
 
 def flush_dead_letter() -> None:
@@ -258,11 +271,13 @@ if __name__ == "__main__":
     logging.root.addHandler(sh)
 
     logger.info("main.py started, argv: %s", sys.argv)
+    validate_notion_schemas()
     try:
         if len(sys.argv) > 1:
             if sys.argv[1] == "--flush":
                 flush_dead_letter()
             else:
+                _log_raw_input(sys.argv[1])
                 triage(sys.argv[1])
             # print("Received input:", sys.argv[1])
     except Exception as e:

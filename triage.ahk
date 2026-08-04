@@ -1,5 +1,8 @@
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+Persistent
+
 ^!t::  ; Ctrl + Alt + T
 {
-    ; We use triple quotes or escaped quotes to ensure the path with spaces is handled correctly
-    Run('python "C:\Users\Samri\Desktop\Coding and stuff\Triage\ui.py"')
+    Run('"C:\Users\Samri\Desktop\Work & Projects\Coding\Coding and stuff\Triage\myenv\Scripts\pythonw.exe" "C:\Users\Samri\Desktop\Work & Projects\Coding\Coding and stuff\Triage\ui.py"')
 }

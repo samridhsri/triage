@@ -1,0 +1,915 @@
+{
+  "version": "1.0",
+  "notes": [
+    "Expected outputs reflect ground-truth labels, not necessarily historical LLM output.",
+    "title_contains: ALL listed keywords must appear (case-insensitive substring) in the LLM title.",
+    "fields: only checked when explicitly listed; omitted fields are not asserted.",
+    "type_options: any of the listed types is acceptable (ambiguous classification).",
+    "Relative dates (tonight, tomorrow, Feb 27th) are never checked for exact due_date value."
+  ],
+  "cases": [
+    {
+      "id": "real_001",
+      "source": "real",
+      "tags": ["task"],
+      "input": "buy milk",
+      "expected": [
+        {"type": "Task", "title_contains": ["milk"], "fields": {"priority": null, "due_date": null}}
+      ]
+    },
+    {
+      "id": "real_002",
+      "source": "real",
+      "tags": ["no-op"],
+      "input": "hello",
+      "expected": []
+    },
+    {
+      "id": "real_003",
+      "source": "real",
+      "tags": ["no-op"],
+      "input": "cute",
+      "expected": []
+    },
+    {
+      "id": "real_004",
+      "source": "real",
+      "tags": ["no-op"],
+      "input": "Hi",
+      "expected": []
+    },
+    {
+      "id": "real_005",
+      "source": "real",
+      "tags": ["no-op"],
+      "input": "Hello",
+      "expected": []
+    },
+    {
+      "id": "real_006",
+      "source": "real",
+      "tags": ["no-op", "typo"],
+      "input": "ajsfbcas jbca bsc",
+      "expected": []
+    },
+    {
+      "id": "real_007",
+      "source": "real",
+      "tags": ["task", "ambiguous"],
+      "note": "LLM historically classified as Project; Task is also acceptable.",
+      "input": "Do Leetcode",
+      "expected": [
+        {"type_options": ["Task", "Project"], "title_contains": ["leetcode"]}
+      ]
+    },
+    {
+      "id": "real_008",
+      "source": "real",
+      "tags": ["idea", "ambiguous"],
+      "note": "Exploratory framing; any of Task/Project/Idea is defensible.",
+      "input": "Try building stuff with Lovable",
+      "expected": [
+        {"type_options": ["Idea", "Task", "Project"], "title_contains": ["lovable"]}
+      ]
+    },
+    {
+      "id": "real_009",
+      "source": "real",
+      "tags": ["task", "typo"],
+      "note": "'tomorror' is a typo; date not checked since it's relative.",
+      "input": "i have to prepare for an exam tomorror",
+      "expected": [
+        {"type": "Task", "title_contains": ["exam"]}
+      ]
+    },
+    {
+      "id": "real_010",
+      "source": "real",
+      "tags": ["task", "date"],
+      "note": "'by tonight' is relative; date value not checked.",
+      "input": "Remind me to get formals for the Capgemini Event by tonight",
+      "expected": [
+        {"type": "Task", "title_contains": ["formals", "capgemini"]}
+      ]
+    },
+    {
+      "id": "real_011",
+      "source": "real",
+      "tags": ["task"],
+      "input": "Record a tutorial usage of Triage",
+      "expected": [
+        {"type": "Task", "title_contains": ["tutorial", "triage"]}
+      ]
+    },
+    {
+      "id": "real_012",
+      "source": "real",
+      "tags": ["task", "pronoun", "ambiguous"],
+      "note": "Pronoun 'her' refers to Anshi. Task or Project both defensible.",
+      "input": "Help Anshi with her onboarding process",
+      "expected": [
+        {"type_options": ["Task", "Project"], "title_contains": ["anshi"]}
+      ]
+    },
+    {
+      "id": "real_013",
+      "source": "real",
+      "tags": ["task", "project", "multi-intent", "pronoun"],
+      "note": "Historically: Project (onboarding) + Task (coffee).",
+      "input": "Help Anshi with her onboarding process and buy coffee",
+      "expected": [
+        {"type_options": ["Task", "Project"], "title_contains": ["anshi"]},
+        {"type": "Task", "title_contains": ["coffee"]}
+      ]
+    },
+    {
+      "id": "real_014",
+      "source": "real",
+      "tags": ["task", "date"],
+      "note": "'Feb 27th' is relative; date not checked (originally resolved to 2026-02-27).",
+      "input": "Do Homework 3 by Feb 27th",
+      "expected": [
+        {"type": "Task", "title_contains": ["homework"]}
+      ]
+    },
+    {
+      "id": "real_015",
+      "source": "real",
+      "tags": ["task"],
+      "note": "'I am stuck there' is context noise; core intent is to link Spotify.",
+      "input": "Try linking spotify with music mindmap I am stuck there",
+      "expected": [
+        {"type": "Task", "title_contains": ["spotify", "mindmap"]}
+      ]
+    },
+    {
+      "id": "real_016",
+      "source": "real",
+      "tags": ["task", "project", "multi-intent"],
+      "input": "add a project about flowers, and add tasks to name different flowers in that project.",
+      "expected": [
+        {"type": "Project", "title_contains": ["flower"]},
+        {"type": "Task", "title_contains": ["flower"]}
+      ]
+    },
+    {
+      "id": "task_001",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "email the recruiter about the open role",
+      "expected": [
+        {"type": "Task", "title_contains": ["email", "recruiter"]}
+      ]
+    },
+    {
+      "id": "task_002",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "push the latest commit",
+      "expected": [
+        {"type": "Task", "title_contains": ["push", "commit"]}
+      ]
+    },
+    {
+      "id": "task_003",
+      "source": "synthetic",
+      "tags": ["task", "priority"],
+      "input": "review the PR before EOD, urgent",
+      "expected": [
+        {"type": "Task", "title_contains": ["review"], "fields": {"priority": "High"}}
+      ]
+    },
+    {
+      "id": "task_004",
+      "source": "synthetic",
+      "tags": ["task", "priority", "date"],
+      "input": "submit the assignment by 2026-07-15, high priority",
+      "expected": [
+        {"type": "Task", "title_contains": ["submit", "assignment"], "fields": {"priority": "High", "due_date": "2026-07-15"}}
+      ]
+    },
+    {
+      "id": "task_005",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "call mom",
+      "expected": [
+        {"type": "Task", "title_contains": ["call", "mom"]}
+      ]
+    },
+    {
+      "id": "task_006",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "fix the login bug",
+      "expected": [
+        {"type": "Task", "title_contains": ["fix", "login"]}
+      ]
+    },
+    {
+      "id": "task_007",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "water the plants",
+      "expected": [
+        {"type": "Task", "title_contains": ["water", "plant"]}
+      ]
+    },
+    {
+      "id": "task_008",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "schedule dentist appointment",
+      "expected": [
+        {"type": "Task", "title_contains": ["dentist"]}
+      ]
+    },
+    {
+      "id": "task_009",
+      "source": "synthetic",
+      "tags": ["task", "pronoun"],
+      "input": "reply to Philip's slack message",
+      "expected": [
+        {"type": "Task", "title_contains": ["philip"]}
+      ]
+    },
+    {
+      "id": "task_010",
+      "source": "synthetic",
+      "tags": ["task", "date"],
+      "note": "'this weekend' is relative; date value not checked.",
+      "input": "prep system design basics this weekend",
+      "expected": [
+        {"type": "Task", "title_contains": ["system design"]}
+      ]
+    },
+    {
+      "id": "task_011",
+      "source": "synthetic",
+      "tags": ["task", "pronoun"],
+      "input": "follow up with Ankit about the referral",
+      "expected": [
+        {"type": "Task", "title_contains": ["ankit", "referral"]}
+      ]
+    },
+    {
+      "id": "task_012",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "update the README with the new setup instructions",
+      "expected": [
+        {"type": "Task", "title_contains": ["readme"]}
+      ]
+    },
+    {
+      "id": "task_013",
+      "source": "synthetic",
+      "tags": ["task", "priority", "date"],
+      "input": "submit visa application by 2026-08-01, this is high priority",
+      "expected": [
+        {"type": "Task", "title_contains": ["visa", "application"], "fields": {"priority": "High", "due_date": "2026-08-01"}}
+      ]
+    },
+    {
+      "id": "task_014",
+      "source": "synthetic",
+      "tags": ["task", "priority"],
+      "input": "book flight tickets asap",
+      "expected": [
+        {"type": "Task", "title_contains": ["flight", "ticket"], "fields": {"priority": "High"}}
+      ]
+    },
+    {
+      "id": "task_015",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "update linkedin profile",
+      "expected": [
+        {"type": "Task", "title_contains": ["linkedin"]}
+      ]
+    },
+    {
+      "id": "task_016",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "practice mock interview with GPT tonight",
+      "expected": [
+        {"type": "Task", "title_contains": ["mock", "interview"]}
+      ]
+    },
+    {
+      "id": "task_017",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "send a thank you email after the Capgemini interview",
+      "expected": [
+        {"type": "Task", "title_contains": ["thank", "email"]}
+      ]
+    },
+    {
+      "id": "task_018",
+      "source": "synthetic",
+      "tags": ["task", "date"],
+      "input": "pay the credit card bill by 2026-09-05",
+      "expected": [
+        {"type": "Task", "title_contains": ["credit", "bill"], "fields": {"due_date": "2026-09-05", "priority": null}}
+      ]
+    },
+    {
+      "id": "task_019",
+      "source": "synthetic",
+      "tags": ["task", "priority"],
+      "input": "reorganize the downloads folder, low priority",
+      "expected": [
+        {"type": "Task", "title_contains": ["download"], "fields": {"priority": "Low"}}
+      ]
+    },
+    {
+      "id": "task_020",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "add unit tests for the schema module",
+      "expected": [
+        {"type": "Task", "title_contains": ["test", "schema"]}
+      ]
+    },
+    {
+      "id": "task_021",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "renew gym membership",
+      "expected": [
+        {"type": "Task", "title_contains": ["gym"]}
+      ]
+    },
+    {
+      "id": "task_022",
+      "source": "synthetic",
+      "tags": ["task", "priority"],
+      "input": "respond to the email from the hiring manager, critical",
+      "expected": [
+        {"type": "Task", "title_contains": ["email", "hiring"], "fields": {"priority": "High"}}
+      ]
+    },
+    {
+      "id": "task_023",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "debug the API endpoint that keeps timing out",
+      "expected": [
+        {"type": "Task", "title_contains": ["debug", "api"]}
+      ]
+    },
+    {
+      "id": "task_024",
+      "source": "synthetic",
+      "tags": ["task", "pronoun"],
+      "input": "message Priya about study group time",
+      "expected": [
+        {"type": "Task", "title_contains": ["priya"]}
+      ]
+    },
+    {
+      "id": "task_025",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "clean up the repo before the demo",
+      "expected": [
+        {"type": "Task", "title_contains": ["repo"]}
+      ]
+    },
+    {
+      "id": "task_026",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "print boarding pass before the flight tomorrow",
+      "expected": [
+        {"type": "Task", "title_contains": ["boarding"]}
+      ]
+    },
+    {
+      "id": "task_027",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "go through the leetcode blind 75 list",
+      "expected": [
+        {"type": "Task", "title_contains": ["leetcode"]}
+      ]
+    },
+    {
+      "id": "task_028",
+      "source": "synthetic",
+      "tags": ["task"],
+      "input": "prepare slides for the project presentation",
+      "expected": [
+        {"type": "Task", "title_contains": ["slide", "presentation"]}
+      ]
+    },
+    {
+      "id": "task_029",
+      "source": "synthetic",
+      "tags": ["task", "typo"],
+      "note": "Typo in 'recieve'; should still be parsed as a Task.",
+      "input": "recieve the package and drop it at the post office",
+      "expected": [
+        {"type_options": ["Task", "Task"], "title_contains": ["package"]}
+      ]
+    },
+    {
+      "id": "task_030",
+      "source": "synthetic",
+      "tags": ["task", "priority"],
+      "input": "finish the eval script today, medium priority",
+      "expected": [
+        {"type": "Task", "title_contains": ["eval"], "fields": {"priority": "Medium"}}
+      ]
+    },
+    {
+      "id": "proj_001",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "build a personal portfolio site",
+      "expected": [
+        {"type": "Project", "title_contains": ["portfolio"]}
+      ]
+    },
+    {
+      "id": "proj_002",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "NYC startup outreach — research and cold email 50 companies",
+      "expected": [
+        {"type": "Project", "title_contains": ["startup"]}
+      ]
+    },
+    {
+      "id": "proj_003",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "DSA prep for interview season, review weekly",
+      "expected": [
+        {"type": "Project", "title_contains": ["dsa"], "fields": {"review_frequency": "Weekly"}}
+      ]
+    },
+    {
+      "id": "proj_004",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "build a chrome extension to track job applications",
+      "expected": [
+        {"type": "Project", "title_contains": ["chrome", "extension"]}
+      ]
+    },
+    {
+      "id": "proj_005",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "set up a personal finance tracker",
+      "expected": [
+        {"type": "Project", "title_contains": ["finance", "tracker"]}
+      ]
+    },
+    {
+      "id": "proj_006",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "learn React by building 5 progressively harder projects",
+      "expected": [
+        {"type": "Project", "title_contains": ["react"]}
+      ]
+    },
+    {
+      "id": "proj_007",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "apply to summer internships — targeting 20 companies",
+      "expected": [
+        {"type": "Project", "title_contains": ["internship"]}
+      ]
+    },
+    {
+      "id": "proj_008",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "write and publish a research paper on LLM evaluation",
+      "expected": [
+        {"type": "Project", "title_contains": ["research"]}
+      ]
+    },
+    {
+      "id": "proj_009",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "build a CLI tool that auto-generates standup notes from git log",
+      "expected": [
+        {"type": "Project", "title_contains": ["cli"]}
+      ]
+    },
+    {
+      "id": "proj_010",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "design and launch a SaaS landing page",
+      "expected": [
+        {"type": "Project", "title_contains": ["saas"]}
+      ]
+    },
+    {
+      "id": "proj_011",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "migrate the backend from Flask to FastAPI",
+      "expected": [
+        {"type": "Project", "title_contains": ["fastapi"]}
+      ]
+    },
+    {
+      "id": "proj_012",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "compete in HackNYU — plan and build a full project",
+      "expected": [
+        {"type": "Project", "title_contains": ["hack"]}
+      ]
+    },
+    {
+      "id": "proj_013",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "create a study plan for the GRE",
+      "expected": [
+        {"type": "Project", "title_contains": ["gre"]}
+      ]
+    },
+    {
+      "id": "proj_014",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "build a gamified habit tracker app",
+      "expected": [
+        {"type": "Project", "title_contains": ["habit", "tracker"]}
+      ]
+    },
+    {
+      "id": "proj_015",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "revamp the music mindmap into a full web app",
+      "expected": [
+        {"type": "Project", "title_contains": ["mindmap"]}
+      ]
+    },
+    {
+      "id": "proj_016",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "write and publish a technical blog series on building with LLMs",
+      "expected": [
+        {"type": "Project", "title_contains": ["blog"]}
+      ]
+    },
+    {
+      "id": "proj_017",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "cold email 30 NYC startups this month",
+      "expected": [
+        {"type": "Project", "title_contains": ["cold email"]}
+      ]
+    },
+    {
+      "id": "proj_018",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "learn system design — cover all major distributed patterns",
+      "expected": [
+        {"type": "Project", "title_contains": ["system design"]}
+      ]
+    },
+    {
+      "id": "proj_019",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "build a browser extension that summarizes job descriptions with AI",
+      "expected": [
+        {"type": "Project", "title_contains": ["browser", "extension"]}
+      ]
+    },
+    {
+      "id": "proj_020",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "apply to graduate programs in CS — targeting 8 schools",
+      "expected": [
+        {"type": "Project", "title_contains": ["graduate"]}
+      ]
+    },
+    {
+      "id": "proj_021",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "create a video series on building AI tools from scratch",
+      "expected": [
+        {"type": "Project", "title_contains": ["video", "ai"]}
+      ]
+    },
+    {
+      "id": "proj_022",
+      "source": "synthetic",
+      "tags": ["project"],
+      "input": "re-architect the triage pipeline for async streaming support",
+      "expected": [
+        {"type": "Project", "title_contains": ["triage"]}
+      ]
+    },
+    {
+      "id": "idea_001",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "what if I built an AI tool that rewrites resumes for each job posting",
+      "expected": [
+        {"type": "Idea", "title_contains": ["resume"]}
+      ]
+    },
+    {
+      "id": "idea_002",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "DSA tracker but gamified",
+      "expected": [
+        {"type": "Idea", "title_contains": ["dsa"]}
+      ]
+    },
+    {
+      "id": "idea_003",
+      "source": "synthetic",
+      "tags": ["idea", "ambiguous"],
+      "input": "universal API gateway for college students",
+      "expected": [
+        {"type_options": ["Idea", "Project"], "title_contains": ["api", "gateway"]}
+      ]
+    },
+    {
+      "id": "idea_004",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "AI-powered changelog generator — would be a great open source tool",
+      "expected": [
+        {"type": "Idea", "title_contains": ["changelog"]}
+      ]
+    },
+    {
+      "id": "idea_005",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "what if Triage had a weekly digest email of all your captures",
+      "expected": [
+        {"type": "Idea", "title_contains": ["triage", "digest"]}
+      ]
+    },
+    {
+      "id": "idea_006",
+      "source": "synthetic",
+      "tags": ["idea", "priority"],
+      "input": "browser extension that flags sketchy ToS clauses before you sign up — high impact",
+      "expected": [
+        {"type": "Idea", "title_contains": ["tos"], "fields": {"potential_impact": "High"}}
+      ]
+    },
+    {
+      "id": "idea_007",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "an app that shows how much time you waste on distracting sites vs focused work",
+      "expected": [
+        {"type": "Idea", "title_contains": ["distraction"]}
+      ]
+    },
+    {
+      "id": "idea_008",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "AI that auto-summarizes your meeting recordings and extracts action items",
+      "expected": [
+        {"type": "Idea", "title_contains": ["meeting", "summary"]}
+      ]
+    },
+    {
+      "id": "idea_009",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "tool that monitors your GitHub stars and notifies you of trending patterns",
+      "expected": [
+        {"type": "Idea", "title_contains": ["github", "star"]}
+      ]
+    },
+    {
+      "id": "idea_010",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "Triage but for emails — auto-classify your inbox into tasks, projects, ideas",
+      "expected": [
+        {"type": "Idea", "title_contains": ["email", "triage"]}
+      ]
+    },
+    {
+      "id": "idea_011",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "CLI that generates commit messages from git diff using an LLM",
+      "expected": [
+        {"type": "Idea", "title_contains": ["commit"]}
+      ]
+    },
+    {
+      "id": "idea_012",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "what if textbooks had AI tutors embedded in each chapter margin",
+      "expected": [
+        {"type": "Idea", "title_contains": ["textbook", "ai"]}
+      ]
+    },
+    {
+      "id": "idea_013",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "sentiment tracker for your journal entries with a weekly mood graph",
+      "expected": [
+        {"type": "Idea", "title_contains": ["journal", "sentiment"]}
+      ]
+    },
+    {
+      "id": "idea_014",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "maybe build a Notion integration that auto-generates project timelines from task lists",
+      "expected": [
+        {"type": "Idea", "title_contains": ["notion", "timeline"]}
+      ]
+    },
+    {
+      "id": "idea_015",
+      "source": "synthetic",
+      "tags": ["idea"],
+      "input": "recommendation engine that matches internship openings to your resume automatically",
+      "expected": [
+        {"type": "Idea", "title_contains": ["internship", "recommendation"]}
+      ]
+    },
+    {
+      "id": "multi_001",
+      "source": "synthetic",
+      "tags": ["task", "idea", "multi-intent"],
+      "input": "email Philip and add an idea about building a referral tracker",
+      "expected": [
+        {"type": "Task", "title_contains": ["email", "philip"]},
+        {"type": "Idea", "title_contains": ["referral"]}
+      ]
+    },
+    {
+      "id": "multi_002",
+      "source": "synthetic",
+      "tags": ["task", "multi-intent"],
+      "input": "submit the ML homework by friday and review the graph algorithms chapter",
+      "expected": [
+        {"type": "Task", "title_contains": ["homework"]},
+        {"type": "Task", "title_contains": ["algorithm"]}
+      ]
+    },
+    {
+      "id": "multi_003",
+      "source": "synthetic",
+      "tags": ["task", "project", "multi-intent"],
+      "input": "build a spotify stats dashboard and remind me to renew spotify premium",
+      "expected": [
+        {"type": "Project", "title_contains": ["spotify", "dashboard"]},
+        {"type": "Task", "title_contains": ["spotify", "premium"]}
+      ]
+    },
+    {
+      "id": "multi_004",
+      "source": "synthetic",
+      "tags": ["task", "project", "idea", "multi-intent"],
+      "input": "email the recruiter, prep for system design round, and maybe build an LLM eval tool",
+      "expected": [
+        {"type": "Task", "title_contains": ["email", "recruiter"]},
+        {"type": "Task", "title_contains": ["system design"]},
+        {"type": "Idea", "title_contains": ["llm", "eval"]}
+      ]
+    },
+    {
+      "id": "multi_005",
+      "source": "synthetic",
+      "tags": ["task", "project", "multi-intent"],
+      "input": "finish the portfolio site and reach out to 5 people on LinkedIn",
+      "expected": [
+        {"type": "Project", "title_contains": ["portfolio"]},
+        {"type": "Task", "title_contains": ["linkedin"]}
+      ]
+    },
+    {
+      "id": "multi_006",
+      "source": "synthetic",
+      "tags": ["task", "multi-intent"],
+      "input": "catch up on linear algebra for the ML course and fix the broken API tests",
+      "expected": [
+        {"type": "Task", "title_contains": ["linear algebra"]},
+        {"type": "Task", "title_contains": ["api", "test"]}
+      ]
+    },
+    {
+      "id": "multi_007",
+      "source": "synthetic",
+      "tags": ["task", "idea", "multi-intent"],
+      "input": "cold email Rahul about the referral and idea: internship tracker with recruiter CRM",
+      "expected": [
+        {"type": "Task", "title_contains": ["rahul"]},
+        {"type": "Idea", "title_contains": ["internship", "tracker"]}
+      ]
+    },
+    {
+      "id": "edge_001",
+      "source": "synthetic",
+      "tags": ["no-op"],
+      "input": "remind me about it",
+      "expected": []
+    },
+    {
+      "id": "edge_002",
+      "source": "synthetic",
+      "tags": ["no-op"],
+      "input": "the thing we talked about",
+      "expected": []
+    },
+    {
+      "id": "edge_003",
+      "source": "synthetic",
+      "tags": ["no-op", "typo"],
+      "input": "!@#$%^&*()",
+      "expected": []
+    },
+    {
+      "id": "edge_004",
+      "source": "synthetic",
+      "tags": ["no-op"],
+      "input": "what should I do today",
+      "expected": []
+    },
+    {
+      "id": "edge_005",
+      "source": "synthetic",
+      "tags": ["no-op"],
+      "input": "lol",
+      "expected": []
+    },
+    {
+      "id": "edge_006",
+      "source": "synthetic",
+      "tags": ["task", "ambiguous"],
+      "note": "Heavily hedged but still contains an actionable intent.",
+      "input": "I should probably get around to updating my resume at some point",
+      "expected": [
+        {"type_options": ["Task", "Idea"], "title_contains": ["resume"]}
+      ]
+    },
+    {
+      "id": "edge_007",
+      "source": "synthetic",
+      "tags": ["task", "ambiguous"],
+      "note": "Could be a single Task or an ongoing Project depending on scope.",
+      "input": "apply to internships",
+      "expected": [
+        {"type_options": ["Task", "Project"], "title_contains": ["internship"]}
+      ]
+    },
+    {
+      "id": "edge_008",
+      "source": "synthetic",
+      "tags": ["task", "typo"],
+      "note": "Heavy typos; core intent (email professor about extension) should still be extracted.",
+      "input": "snd emal to proffesor abut the extention on hw 4",
+      "expected": [
+        {"type": "Task", "title_contains": ["email"]}
+      ]
+    },
+    {
+      "id": "edge_009",
+      "source": "synthetic",
+      "tags": ["task", "priority"],
+      "note": "No explicit priority cue; LLM must NOT invent one.",
+      "input": "practice leetcode problems",
+      "expected": [
+        {"type": "Task", "title_contains": ["leetcode"], "fields": {"priority": null, "due_date": null}}
+      ]
+    },
+    {
+      "id": "edge_010",
+      "source": "synthetic",
+      "tags": ["no-op"],
+      "note": "Vague diary-style musing with no actionable intent.",
+      "input": "I don't know what to do about the job situation",
+      "expected": []
+    }
+  ]
+}

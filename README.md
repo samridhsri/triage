@@ -72,22 +72,47 @@ REMINDERS_DB_ID=
 
 ### 5. Set up the hotkey
 
-Open `triage.ahk` and update the path on line 4 to match where you cloned the project:
+Open `triage.ahk` and update the paths to match your project location:
 
 ```autohotkey
-Run('python "C:\your\path\to\Triage\ui.py"')
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+Persistent
+
+^!t::  ; Ctrl + Alt + T
+{
+    Run('"C:\your\path\to\Triage\myenv\Scripts\pythonw.exe" "C:\your\path\to\Triage\ui.py"')
+}
 ```
 
-Then double-click `triage.ahk` to run it (AutoHotkey must be installed). You'll see it appear in the system tray. To have it start automatically, add a shortcut to your Windows Startup folder (`Win + R` → `shell:startup`).
+Double-click `triage.ahk` to run it (AutoHotkey v2 must be installed). You'll see it appear in your Windows system tray. To launch automatically on startup, add a shortcut to your Windows Startup folder (`Win + R` → `shell:startup`).
 
 ---
 
 ## Usage
 
-1. Press **Ctrl + Alt + T** anywhere
-2. Type what's on your mind — you can mix multiple things in one sentence
-3. Press **Enter** — the window closes and Triage processes your input in the background
-4. Check your Notion databases — items appear within a few seconds
+1. Press **Ctrl + Alt + T** anywhere on Windows.
+2. Type what's on your mind — single or multi-intent inputs work seamlessly.
+3. Press **Enter** — the window closes and Triage processes your input in the background.
+4. Check your Notion databases — items appear within a few seconds!
+
+### Running via Command Line
+
+You can also run triage directly from your CLI:
+
+```sh
+# Run triage on an input string
+myenv\Scripts\python.exe main.py "email recruiter and push latest commit"
+
+# Flush the dead-letter queue (retry failed Notion writes)
+myenv\Scripts\python.exe main.py --flush
+
+# Run unit tests
+myenv\Scripts\python.exe -m unittest main -v
+
+# Run LLM evaluation suite
+myenv\Scripts\python.exe evaluation/eval.py --real-only
+```
 
 Examples of what you can say:
 

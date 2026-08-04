@@ -42,3 +42,9 @@ env/
 Thumbs.db
 
 todo
+triage.log
+raw_inputs.jsonl
+dead_letter.jsonl
+myenv/
+.claude/
+
